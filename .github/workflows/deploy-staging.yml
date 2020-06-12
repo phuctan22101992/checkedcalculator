@@ -4,8 +4,10 @@ on:
   #push:
   #  branches:
   #    - master
+  #pull_request:
+  #  types: [closed]
   pull_request:
-    types: [closed]
+    types: [opened]
 
 env:
   DOCKER_IMAGE_NAME: gumbon-azure3-ttt
@@ -22,9 +24,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Pull request merged
-        if: github.action == 'closed' && github.event.pull_request.merged == 'true' 
-        run: echo merged        
+      #- name: Pull request merged
+        #if: github.action == 'closed' && github.event.pull_request.merged == 'true' 
+      #  run: echo merged        
       - uses: actions/checkout@v1
       - name: npm install and build webpack
         run: |

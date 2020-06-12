@@ -1,8 +1,9 @@
 name: Stage the app
 
 on: 
-  pull_request:
-    types: [review_requested]
+  push:
+    branches:
+      - master
 
 env:
   DOCKER_IMAGE_NAME: gumbon-azure3-ttt

@@ -20,10 +20,10 @@ env:
 
 jobs:
   build:
-    if: github.event.pull_request.merged == 'true'
     runs-on: ubuntu-latest
-
     steps:
+      - name: Pull request merged
+        if: github.action 'closed' && github.pull_request.merged == 'true'         
       - uses: actions/checkout@v1
       - name: npm install and build webpack
         run: |

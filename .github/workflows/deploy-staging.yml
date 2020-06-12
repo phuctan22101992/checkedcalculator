@@ -2,7 +2,7 @@ name: Stage the app
 
 on: 
   pull_request:
-    types: [opened]
+    types: [review_requested]
 
 env:
   DOCKER_IMAGE_NAME: gumbon-azure3-ttt

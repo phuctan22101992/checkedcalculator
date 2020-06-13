@@ -72,7 +72,7 @@ jobs:
         with:
           login-server: ${{env.IMAGE_REGISTRY_URL}}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_PAT }}
+          password: ${{ secrets.GH_PAT }}
 
       - name: Deploy web app container
         uses: azure/webapps-container-deploy@v1

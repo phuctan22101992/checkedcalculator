@@ -1,0 +1,85 @@
+name: Production Deployment
+
+on: 
+  push:
+   branches:
+      - master
+  #pull_request:
+  #  types: [closed]
+  #pull_request:
+  #  types: [opened]
+
+env:
+  DOCKER_IMAGE_NAME: gumbon-azure3-ttt       #need to check & update
+  IMAGE_REGISTRY_URL: docker.pkg.github.com  #need to check & update
+  AZURE_WEBAPP_NAME: gumbon-test3-app        #need to check & update
+  ##also need to check secrets name written below
+  ## 4 secrets needed: 
+  #AZURE_CREDENTIALS
+  #AZURE_SUBSCRIPTION_ID
+  #AZURE_PUBLISH_PROFILE   #changed on each web app, this time we only use for staging
+  #GH_PAT
+
+jobs:
+  Build-Test:
+    runs-on: ubuntu-latest
+    steps:
+      #- name: Pull request merged
+        #if: github.action == 'closed' && github.event.pull_request.merged == 'true' 
+      #  run: echo merged        
+      - uses: actions/checkout@v1
+      - name: npm install and build webpack
+        run: |
+          npm install
+          npm run build
+          npm test
+      - uses: actions/upload-artifact@master
+        with:
+          name: webpack artifacts
+          path: public/
+
+  Build-Docker-Image:
+    runs-on: ubuntu-latest
+    needs: Build-Test
+    name: Build image and store in GitHub Packages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+
+      - name: Download built artifact
+        uses: actions/download-artifact@master
+        with:
+          name: webpack artifacts
+          path: public
+
+      - name: create image and store in Packages
+        uses: mattdavis0351/actions/docker-gpr@1.3.0
+        with:
+          repo-token: ${{secrets.GITHUB_TOKEN}}
+          image-name: ${{env.DOCKER_IMAGE_NAME}}
+
+  Deploy-to-Azure:
+    runs-on: ubuntu-latest
+    needs: Build-Docker-Image
+    name: Deploy app container to Azure using Credentials
+    steps:
+      - name: "Login via Azure CLI"
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - uses: azure/docker-login@v1
+        with:
+          login-server: ${{env.IMAGE_REGISTRY_URL}}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_PAT }}
+
+      - name: Deploy web app container
+        uses: azure/webapps-container-deploy@v1
+        with:
+          app-name: ${{env.AZURE_WEBAPP_NAME}}
+          images: ${{env.IMAGE_REGISTRY_URL}}/${{ github.repository }}/${{env.DOCKER_IMAGE_NAME}}:${{ github.sha }}
+
+      - name: Azure logout
+        run: |
+          az logout
